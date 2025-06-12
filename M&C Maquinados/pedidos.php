@@ -41,7 +41,7 @@ $productos = $query->fetchAll(PDO::FETCH_ASSOC);
 if (isset($_POST['solicitar'])) {
     $id_usuario = $_SESSION['id_usuario'];
     $id_productos = $_POST['id_productos'];
-    $fecha_pedido = date('Y-m-d H:i:s');
+    $fecha_pedido = date('Y-m-d');
     $estatus = 'pendiente';
 
     $sql_pedido = "INSERT INTO pedidos (id_usuario, id_productos, fecha_pedido, estatus) VALUES (:id_usuario, :id_productos, :fecha_pedido, :estatus)";
