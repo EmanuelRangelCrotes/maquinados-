@@ -38,33 +38,36 @@ if ($query->rowCount() == 0) {
 }
 $productos = $query->fetchAll(PDO::FETCH_ASSOC);
 
-if (isset($_POST['solicitar'])) {
-    $id_usuario = $_SESSION['id_usuario'];
+
+if (isset($_POST['agregar_carrito'])) {
     $id_productos = $_POST['id_productos'];
+ pedidos-aceptados-negados
     $fecha_pedido = date('Y-m-d');
     $estatus = 'pendiente';
 
-    $sql_pedido = "INSERT INTO pedidos (id_usuario, id_productos, fecha_pedido, estatus) VALUES (:id_usuario, :id_productos, :fecha_pedido, :estatus)";
-    $stmt = $cnnPDO->prepare($sql_pedido);
-    $stmt->bindParam(':id_usuario', $id_usuario);
-    $stmt->bindParam(':id_productos', $id_productos);
-    $stmt->bindParam(':fecha_pedido', $fecha_pedido);
-    $stmt->bindParam(':estatus', $estatus);
+ main
 
-    if ($stmt->execute()) {
+    // Convertir a entero por seguridad
+    $id_productos = intval($id_productos);
+
+    // Si no existe en el carrito, lo agregamos con cantidad 1
+    if (!isset($_SESSION['carrito'][$id_productos])) {
+        $_SESSION['carrito'][$id_productos] = 1;
         $_SESSION['toastr'] = [
             'type' => 'success',
-            'message' => 'Pedido realizado con éxito.'
+            'message' => 'Producto agregado al carrito.'
         ];
     } else {
         $_SESSION['toastr'] = [
-            'type' => 'error',
-            'message' => 'Error al realizar el pedido.'
+            'type' => 'info',
+            'message' => 'El producto ya está en el carrito.'
         ];
     }
-    header("Location: pedidos.php");
+
+    header("Location: " . $_SERVER['PHP_SELF']);
     exit();
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -92,6 +95,9 @@ if (isset($_POST['solicitar'])) {
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="productos.php">Solicitar Material</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="carrito.php">carrito</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
@@ -125,7 +131,11 @@ if (isset($_POST['solicitar'])) {
                     <td>
                         <form method="post">
                             <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
-                            <button type="submit" name="solicitar" class="btn btn-outline-success">Solicitar Material</button>
+                            <form method="post">
+    <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
+    <button type="submit" name="agregar_carrito" class="btn btn-outline-success">Agregar al Carrito</button>
+</form>
+
                         </form>
                     </td>
 
