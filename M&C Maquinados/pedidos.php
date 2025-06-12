@@ -41,6 +41,11 @@ $productos = $query->fetchAll(PDO::FETCH_ASSOC);
 
 if (isset($_POST['agregar_carrito'])) {
     $id_productos = $_POST['id_productos'];
+ pedidos-aceptados-negados
+    $fecha_pedido = date('Y-m-d');
+    $estatus = 'pendiente';
+
+ main
 
     // Convertir a entero por seguridad
     $id_productos = intval($id_productos);
