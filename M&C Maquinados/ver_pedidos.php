@@ -2,93 +2,98 @@
 require_once 'bd/db_conexion.php';
 session_start();
 
-// Tiempo límite de inactividad (30 minutos)
-$tiempo_limite = 1800;
-if (isset($_SESSION['ultimo_acceso'])) {
-    $inactividad = time() - $_SESSION['ultimo_acceso'];
-    if ($inactividad > $tiempo_limite) {
-        session_unset(); // Eliminar datos de la sesión
-        session_destroy(); // Destruir la sesión
-        header('Location: login.php');
-        exit();
+$id_usuario = $_SESSION['id_usuario'];
+$name = $_SESSION['name'];
+
+$sql = "SELECT o.id_orden, o.fecha, o.estatus, 
+               d.id_productos, d.cantidad,
+               p.nombre AS nombre_producto, p.precio
+        FROM ordenes o
+        JOIN orden_detalles d ON o.id_orden = d.id_orden
+        JOIN productos p ON d.id_productos = p.id_productos
+        WHERE o.id_usuario = :id_usuario
+        ORDER BY o.id_orden DESC";
+
+$stmt = $cnnPDO->prepare($sql);
+$stmt->bindParam(':id_usuario', $id_usuario);
+$stmt->execute();
+$pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$ordenes_agrupadas = [];
+foreach ($pedidos as $pedido) {
+    $id_orden = $pedido['id_orden'];
+    if (!isset($ordenes_agrupadas[$id_orden])) {
+        $ordenes_agrupadas[$id_orden] = [
+            'fecha' => $pedido['fecha'],
+            'estatus' => $pedido['estatus'],
+            'productos' => []
+        ];
     }
-}
-$_SESSION['ultimo_acceso'] = time(); // Actualizar el tiempo de acceso
-
-// Verificar si el usuario ha iniciado sesión
-if (!isset($_SESSION['name'])) {
-    header('Location: login.php');
-    exit();
-}
-
-$name = htmlspecialchars($_SESSION['name'], ENT_QUOTES, 'UTF-8'); // Escapar caracteres especiales
-$usuario_id = $_SESSION['id_usuario'];
-
-
-$sql = "SELECT p.id_pedidos, p.fecha_pedido, p.estatus, 
-               pr.nombre AS nombre_producto, pr.sku, pr.clase, pr.descripcion, pr.unidad_medida, pr.precio,
-               u.name AS nombre_usuario
-        FROM pedidos p
-        JOIN productos pr ON p.id_productos = pr.id_productos
-        JOIN users u ON p.id_usuario = u.id_usuario
-        ORDER BY p.fecha_pedido DESC";
-$query = $cnnPDO->prepare($sql);
-$query->execute();
-$pedidos = $query->fetchAll(PDO::FETCH_ASSOC);
-
-if ($query->rowCount() == 0) {
-    $_SESSION['toastr'] = [
-        'type' => 'error',
-        'message' => 'No hay pedidos realizados.'
+    $ordenes_agrupadas[$id_orden]['productos'][] = [
+        'id_productos' => $pedido['id_productos'],
+        'nombre' => $pedido['nombre_producto'],
+        'cantidad' => $pedido['cantidad'],
+        'precio' => $pedido['precio'],
+        'subtotal' => $pedido['cantidad'] * $pedido['precio']
     ];
-    header("Location: sesion_usuario.php");
-    exit();
 }
 
-if(isset($_POST['aceptar_pedido'])){
-    $id_pedidos = $_POST['id_pedidos'];
+if (isset($_POST['insertar'])){
+    $id_orden = $_POST['id_orden'];
+    $id_usuario = $_SESSION['id_usuario'];
+    $fecha_pedido = $_POST['fecha_pedido'];
     $estatus = 'aceptado';
 
-    $sql_update = "UPDATE pedidos SET estatus = :estatus WHERE id_pedidos = :id_pedidos";
-    $query_update = $cnnPDO->prepare($sql_update);
-    $query_update->bindParam(':estatus', $estatus);
-    $query_update->bindParam(':id_pedidos', $id_pedidos);
+    // Filtrar los productos de esta orden
+    foreach ($ordenes_agrupadas[$id_orden]['productos'] as $producto) {
+        $id_productos = $producto['id_productos'];
+        $cantidad = $producto['cantidad'];
 
-    if ($query_update->execute()) {
-        $_SESSION['toastr'] = [
-            'type' => 'success',
-            'message' => 'Pedido aceptado con éxito.'
-        ];
-        header("Location: ver_pedidos.php");
-        exit();
-    } else {
-        $_SESSION['toastr'] = [
-            'type' => 'error',
-            'message' => 'Error al aceptar el pedido.'
-        ];
+        $sql_insert = "INSERT INTO pedidos (id_usuario, id_productos, fecha_pedido, estatus, cantidad) 
+                       VALUES (:id_usuario, :id_productos, :fecha_pedido, :estatus, :cantidad)";
+        $query_insert = $cnnPDO->prepare($sql_insert);
+        $query_insert->bindParam(':id_usuario', $id_usuario);
+        $query_insert->bindParam(':id_productos', $id_productos);
+        $query_insert->bindParam(':fecha_pedido', $fecha_pedido);
+        $query_insert->bindParam(':estatus', $estatus);
+        $query_insert->bindParam(':cantidad', $cantidad);
+        $query_insert->execute(); // No hace falta verificar en cada paso
     }
+
+    $_SESSION['toastr'] = [
+        'type'=> 'success',
+        'message' => 'Pedido aceptado con éxito'
+    ];
+    header("Location: ver_pedidos.php");
+    exit();
+} else{
+    $_SESSION['toastr'] =[
+        'type' => 'error',
+        'message => Error al aceptar el pedido'
+    ];
 }
 
-if(isset($_POST['rechazar_pedido'])){
-    $id_pedidos = $_POST['id_pedidos'];
 
-    $sql_delete = "DELETE FROM pedidos WHERE id_pedidos = :id_pedidos";
-    $query_rechazar = $cnnPDO->prepare($sql_delete);
+if (isset($_POST['eliminar'])) {
+    $id_orden = $_POST['id_orden'];
 
-    $query_rechazar->bindParam(':id_pedidos', $id_pedidos);
+    $sql_delete = "DELETE FROM ordenes WHERE id_orden = :id_orden";
+    $query_delete = $cnnPDO->prepare($sql_delete);
+    $query_delete->bindParam(':id_orden', $id_orden);
 
-    if ($query_rechazar->execute()) {
-        $_SESSION['toastr'] = [
-            'type' => 'success',
-            'message' => 'Pedido rechazado con éxito.'
+    if ($query_delete->execute) {
+         $_SESSION['toastr'] = [
+            'type'=> 'success',
+            'message' => 'Pedido rechazado'
         ];
         header("Location: ver_pedidos.php");
         exit();
-    } else {
+    }else{
         $_SESSION['toastr'] = [
             'type' => 'error',
-            'message' => 'Error al rechazar el pedido.'
+            'message => Error al rechazar el pedido'
         ];
+        
     }
 }
 ?>
@@ -101,23 +106,19 @@ if(isset($_POST['rechazar_pedido'])){
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark" style="width: 121%;">
+    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
         <div class="container-fluid">
             <h1 class="navbar-brand">Bienvenido <?php echo $name; ?></h1>
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav me-auto">
+                    
                     <li class="nav-item">
-                        <a class="nav-link" href="sesion_usuario.php">Pagina Principal</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="productos.php">Solicitar Material</a>
+                        <a class="nav-link" href="pedidos.php">Pedidos de Material</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
@@ -126,76 +127,50 @@ if(isset($_POST['rechazar_pedido'])){
         </div>
     </nav>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Pedido #</th>
-                <th>Fecha</th>
-                <th>Usuario</th>
-                <th>Producto</th>
-                <th>SKU</th>
-                <th>Clase</th>
-                <th>Descripción</th>
-                <th>Unidad de Medida</th>
-                <th>Precio</th>
-                <th>Estatus</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($pedidos as $pedido): ?>
+    <h2>Mis Pedidos</h2>
+
+<?php foreach ($ordenes_agrupadas as $id_orden => $orden): ?>
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
+        <h3>Orden #<?= $id_orden ?> - <?= $orden['fecha'] ?> (<?= $orden['estatus'] ?>)</h3>
+        <table class="table">
+            <thead>
                 <tr>
-                    <td><?php echo htmlspecialchars($pedido['id_pedidos']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['fecha_pedido']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['nombre_usuario']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['nombre_producto']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['sku']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['clase']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['descripcion']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['unidad_medida']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['precio']); ?></td>
-                    <td><?php echo htmlspecialchars($pedido['estatus']); ?></td>
-
-                    <td>
-                        <form method="post">
-                            <input type="hidden" name="id_pedidos" value="<?php echo $pedido['id_pedidos']; ?>">
-                            <button type="submit" name="aceptar_pedido" class="btn btn-success">Aceptar Pedido</button>
-                        </form>
-                    </td>
-
-                    <td>
-                        <form method="post">
-                            <input type="hidden" name="id_pedidos" value="<?php echo $pedido['id_pedidos']; ?>">
-                            <button type="submit" name="rechazar_pedido" class="btn btn-danger">Rechazar Pedido</button>
-                        </form>
-                    </td>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio unitario</th>
+                    <th>Subtotal</th>
                 </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php 
+                $total = 0;
+                foreach ($orden['productos'] as $producto): 
+                    $total += $producto['subtotal'];
+                ?>
+                    <tr>
+                        <td><?= $producto['nombre'] ?></td>
+                        <td><?= $producto['cantidad'] ?></td>
+                        <td>$<?= number_format($producto['precio'], 2) ?></td>
+                        <td>$<?= number_format($producto['subtotal'], 2) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr>
+                    <td colspan="3"><strong>Total</strong></td>
+                    <td><strong>$<?= number_format($total, 2) ?></strong></td>
+                    <td>
+                        <form method="post">
+                            <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
+                            <input type="hidden" name="fecha_pedido" value="<?php echo $orden['fecha']; ?>">
+                            <button type="submit" name="insertar" class="btn btn-success">Aceptar Pedido</button>
+                        </form>
 
-    
+                    </td>
 
-    <!-- Script para mostrar las alertas de Toastr -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
-
-    <script>
-        // Configuración global de Toastr
-        toastr.options = {
-            closeButton: true, // Agrega el botón de cerrar
-            progressBar: true, // Muestra una barra de progreso
-            timeOut: 3000, // Tiempo antes de que desaparezca (3s)
-            extendedTimeOut: 2000,
-            positionClass: "toast-top-right"
-        };
-
-        $(document).ready(function() {
-            <?php if (isset($_SESSION['toastr'])): ?>
-                toastr.<?= $_SESSION['toastr']['type'] ?>("<?= addslashes($_SESSION['toastr']['message']) ?>");
-                <?php unset($_SESSION['toastr']); ?>
-            <?php endif; ?>
-        });
-    </script>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+<?php endforeach; ?>
 </body>
 
 </html>
