@@ -72,9 +72,13 @@ $total = 0;
                     <a class="nav-link" href="logout.php">Cerrar Sesión</a>
                 </li>
         </div>
+<<<<<<< HEAD
     </div>
 </nav>
 
+=======
+    </nav>
+>>>>>>> bec188554be11c221ff11ebc523da7981d467780
 <body>
     <h2>Carrito de Compras</h2>
     <table class="table">
