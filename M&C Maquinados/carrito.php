@@ -73,7 +73,7 @@ $total = 0;
             </div>
         </div>
     </nav>
-<body class="container mt-4">
+<body>
     <h2>Carrito de Compras</h2>
     <table class="table">
         <thead>
