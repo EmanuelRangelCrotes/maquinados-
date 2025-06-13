@@ -51,29 +51,31 @@ $total = 0;
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Carrito de Compras</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
 </head>
- <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
-        <div class="container-fluid">
-            <h1 class="navbar-brand">Bienvenido <?php echo $name; ?></h1>
-            <div class="collapse navbar-collapse" id="navbarColor01">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="productos.php">Solicitar Material</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="pedidos.php">Pedidos de Material</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php">Cerrar Sesión</a>
-                    </li>
-            </div>
+<nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+    <div class="container-fluid">
+        <h1 class="navbar-brand">Bienvenido <?php echo $name; ?></h1>
+        <div class="collapse navbar-collapse" id="navbarColor01">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="productos.php">Solicitar Material</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="pedidos.php">Pedidos de Material</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="logout.php">Cerrar Sesión</a>
+                </li>
         </div>
-    </nav>
-<body class="container mt-4">
+    </div>
+</nav>
+
+<body>
     <h2>Carrito de Compras</h2>
     <table class="table">
         <thead>
@@ -86,7 +88,7 @@ $total = 0;
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($productos as $producto): 
+            <?php foreach ($productos as $producto):
                 $id = $producto['id_productos'];
                 $cantidad = $_SESSION['carrito'][$id];
                 $precio = $producto['precio'];
@@ -124,4 +126,5 @@ $total = 0;
 
     <a href="finalizar_pedido.php" class="btn btn-success">Finalizar Pedido</a>
 </body>
+
 </html>

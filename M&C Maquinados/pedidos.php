@@ -41,11 +41,6 @@ $productos = $query->fetchAll(PDO::FETCH_ASSOC);
 
 if (isset($_POST['agregar_carrito'])) {
     $id_productos = $_POST['id_productos'];
- pedidos-aceptados-negados
-    $fecha_pedido = date('Y-m-d');
-    $estatus = 'pendiente';
-
- main
 
     // Convertir a entero por seguridad
     $id_productos = intval($id_productos);
@@ -118,6 +113,11 @@ if (isset($_POST['agregar_carrito'])) {
             </tr>
         </thead>
         <tbody>
+        <?php if (empty($productos)): ?>
+            <tr>
+                <td colspan="6" class="text-center text-danger">No hay productos disponibles.</td>
+            </tr>
+        <?php else:?>
             <?php foreach ($productos as $producto): ?>
                 <tr>
                     <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
@@ -132,15 +132,16 @@ if (isset($_POST['agregar_carrito'])) {
                         <form method="post">
                             <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
                             <form method="post">
-    <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
-    <button type="submit" name="agregar_carrito" class="btn btn-outline-success">Agregar al Carrito</button>
-</form>
+                                <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
+                                <button type="submit" name="agregar_carrito" class="btn btn-outline-success">Agregar al Carrito</button>
+                            </form>
 
                         </form>
                     </td>
 
                 </tr>
             <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>;
 
