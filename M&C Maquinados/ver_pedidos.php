@@ -11,7 +11,8 @@ $sql = "SELECT o.id_orden, o.fecha, o.estatus,
         FROM ordenes o
         JOIN orden_detalles d ON o.id_orden = d.id_orden
         JOIN productos p ON d.id_productos = p.id_productos
-        WHERE o.id_usuario = :id_usuario
+        join users u ON u.id_usuario = u.id_usuario
+        WHERE u.id_usuario = :id_usuario
         ORDER BY o.id_orden DESC";
 
 $stmt = $cnnPDO->prepare($sql);
@@ -103,10 +104,6 @@ if (isset($_POST['eliminar'])) {
     }
 }
 
-// Filtrar solo pedidos pendientes
-$pedidos_pendientes = array_filter($pedidos, function ($pedido) {
-    return $pedido['estatus'] === 'pendiente';
-});
 ?>
 
 <!DOCTYPE html>
@@ -179,20 +176,7 @@ $pedidos_pendientes = array_filter($pedidos, function ($pedido) {
                         <tr>
                             <td colspan="3"><strong>Total</strong></td>
                             <td><strong>$<?= number_format($total, 2) ?></strong></td>
-                            <td>
-                                <form method="post">
-                                    <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
-                                    <input type="hidden" name="fecha_pedido" value="<?php echo $orden['fecha']; ?>">
-                                    <button type="submit" name="insertar" class="btn btn-success">Aceptar Pedido</button>
-                                </form>
-                            </td>
-                             <td>
-                                <form method="post">
-                                    <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
-                                    <input type="hidden" name="fecha_pedido" value="<?php echo $orden['fecha']; ?>">
-                                    <button type="submit" name="eliminar" class="btn btn-danger">Rechazar Pedido</button>
-                                </form>
-                            </td>
+                            
                         </tr>
                     </tbody>
                 </table>
