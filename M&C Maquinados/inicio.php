@@ -139,7 +139,7 @@ if (isset($_POST['eliminar'])) {
                 <ul class="navbar-nav me-auto">
 
                     <li class="nav-item">
-                        <a class="nav-link" href="haceptados_adm.php">pedidos aceptados</a>
+                        <a class="nav-link" href="aceptados_adm.php">pedidos aceptados</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
