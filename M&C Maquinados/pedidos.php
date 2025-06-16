@@ -95,6 +95,9 @@ if (isset($_POST['agregar_carrito'])) {
                         <a class="nav-link" href="carrito.php">carrito</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="ver_pedidos.php">Solicitud de Pedidos</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
                     </li>
             </div>
@@ -113,35 +116,35 @@ if (isset($_POST['agregar_carrito'])) {
             </tr>
         </thead>
         <tbody>
-        <?php if (empty($productos)): ?>
-            <tr>
-                <td colspan="6" class="text-center text-danger">No hay productos disponibles.</td>
-            </tr>
-        <?php else:?>
-            <?php foreach ($productos as $producto): ?>
+            <?php if (empty($productos)): ?>
                 <tr>
-                    <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
-                    <td><?php echo htmlspecialchars($producto['nombre']); ?> b4-b</td>
-                    <td><?php echo htmlspecialchars($producto['sku']); ?></td>
-                    <td><?php echo htmlspecialchars($producto['clase']); ?></td>
-                    <td><?php echo htmlspecialchars($producto['descripcion']); ?></td>
-                    <td><?php echo htmlspecialchars($producto['unidad_medida']); ?></td>
-                    <td><?php echo htmlspecialchars($producto['precio']); ?></td>
+                    <td colspan="6" class="text-center text-danger">No hay productos disponibles.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($productos as $producto): ?>
+                    <tr>
+                        <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
+                        <td><?php echo htmlspecialchars($producto['nombre']); ?> b4-b</td>
+                        <td><?php echo htmlspecialchars($producto['sku']); ?></td>
+                        <td><?php echo htmlspecialchars($producto['clase']); ?></td>
+                        <td><?php echo htmlspecialchars($producto['descripcion']); ?></td>
+                        <td><?php echo htmlspecialchars($producto['unidad_medida']); ?></td>
+                        <td><?php echo htmlspecialchars($producto['precio']); ?></td>
 
-                    <td>
-                        <form method="post">
-                            <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
+                        <td>
                             <form method="post">
                                 <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
-                                <button type="submit" name="agregar_carrito" class="btn btn-outline-success">Agregar al Carrito</button>
+                                <form method="post">
+                                    <input type="hidden" name="id_productos" value="<?php echo $producto['id_productos']; ?>">
+                                    <button type="submit" name="agregar_carrito" class="btn btn-outline-success">Agregar al Carrito</button>
+                                </form>
+
                             </form>
+                        </td>
 
-                        </form>
-                    </td>
-
-                </tr>
-            <?php endforeach; ?>
-        <?php endif; ?>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>;
 

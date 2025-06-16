@@ -108,6 +108,12 @@ if (!isset($_SESSION['name'])) {
                         <a class="nav-link" href="pedidos.php">Pedidos de Material</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="carrito.php">Carrito</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ver_pedidos.php">Solicitud de Pedidos</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
                     </li>
                 </ul>
