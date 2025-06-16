@@ -5,18 +5,31 @@ session_start();
 $id_usuario = $_SESSION['id_usuario'];
 $name = $_SESSION['name'];
 
-$sql = "SELECT o.id_orden, o.fecha, o.estatus, 
+$id_usuario = $_SESSION['id_usuario'];
+$sql_rol = "SELECT rol FROM users WHERE id_usuario = :id_usuario";
+$stmt_rol = $cnnPDO->prepare($sql_rol);
+$stmt_rol->bindParam(':id_usuario', $id_usuario);
+$stmt_rol->execute();
+$usuario = $stmt_rol->fetch(PDO::FETCH_ASSOC);
+$es_admin = ($usuario && $usuario['rol'] === 'admin');
+
+// Consulta de pedidos
+if ($es_admin) {
+    // Admin ve todos los pedidos
+    $sql = "SELECT o.id_orden, o.fecha, o.estatus, 
                d.id_productos, d.cantidad,
-               p.nombre AS nombre_producto, p.precio
+               p.nombre AS nombre_producto, p.precio,
+               u.name AS nombre_usuario
         FROM ordenes o
         JOIN orden_detalles d ON o.id_orden = d.id_orden
         JOIN productos p ON d.id_productos = p.id_productos
-        WHERE o.id_usuario = :id_usuario
+        JOIN users u ON o.id_usuario = u.id_usuario
+        WHERE o.estatus = 'pendiente'
         ORDER BY o.id_orden DESC";
 
-$stmt = $cnnPDO->prepare($sql);
-$stmt->bindParam(':id_usuario', $id_usuario);
-$stmt->execute();
+    $stmt = $cnnPDO->prepare($sql);
+    $stmt->execute();
+}
 $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $ordenes_agrupadas = [];
@@ -31,13 +44,13 @@ foreach ($pedidos as $pedido) {
     }
     $ordenes_agrupadas[$id_orden]['productos'][] = [
         'id_productos' => $pedido['id_productos'],
+        'name' => $pedido['nombre_usuario'],
         'nombre' => $pedido['nombre_producto'],
         'cantidad' => $pedido['cantidad'],
         'precio' => $pedido['precio'],
         'subtotal' => $pedido['cantidad'] * $pedido['precio']
     ];
 }
-
 if (isset($_POST['insertar'])) {
     $id_orden = $_POST['id_orden'];
     $id_usuario = $_SESSION['id_usuario'];
@@ -57,16 +70,23 @@ if (isset($_POST['insertar'])) {
         $query_insert->bindParam(':fecha_pedido', $fecha_pedido);
         $query_insert->bindParam(':estatus', $estatus);
         $query_insert->bindParam(':cantidad', $cantidad);
-        $query_insert->execute(); // No hace falta verificar en cada paso
+        $query_insert->execute();
     }
+
+    // ACTUALIZAR ESTATUS DE ORDEN A 'aceptado' EN VEZ DE ELIMINAR
+    $sql_update = "UPDATE ordenes SET estatus = 'aceptado' WHERE id_orden = :id_orden";
+    $query_update = $cnnPDO->prepare($sql_update);
+    $query_update->bindParam(':id_orden', $id_orden);
+    $query_update->execute();
 
     $_SESSION['toastr'] = [
         'type' => 'success',
         'message' => 'Pedido aceptado con éxito'
     ];
-    header("Location: incio.php");
+    header("Location: inicio.php");
     exit();
-} else {
+}
+ else {
     $_SESSION['toastr'] = [
         'type' => 'error',
         'message => Error al aceptar el pedido'
@@ -96,10 +116,7 @@ if (isset($_POST['eliminar'])) {
     }
 }
 
-// Filtrar solo pedidos pendientes
-$pedidos_pendientes = array_filter($pedidos, function($pedido) {
-    return $pedido['estatus'] === 'pendiente';
-});
+
 ?>
 
 <!DOCTYPE html>
@@ -120,7 +137,7 @@ $pedidos_pendientes = array_filter($pedidos, function($pedido) {
             <h1 class="navbar-brand">Bienvenido <?php echo $name; ?></h1>
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav me-auto">
-                    
+
                     <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
                     </li>
@@ -131,55 +148,64 @@ $pedidos_pendientes = array_filter($pedidos, function($pedido) {
     <h2 style="text-align: center;">Pedidos Pendientes</h2>
     <br>
 
-<?php if (empty($ordenes_agrupadas)): ?>
-    <h2 class="text-danger text-center">No hay pedidos registrados.</h2>
-<?php else: ?>
-    <?php foreach ($ordenes_agrupadas as $id_orden => $orden): ?>
-        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
-            <h3>Orden #<?= $id_orden ?> - <?= $orden['fecha'] ?> (<?= $orden['estatus'] ?>)</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio unitario</th>
-                        <th>Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $total = 0;
-                    foreach ($orden['productos'] as $producto):
-                        $total += $producto['subtotal'];
-                    ?>
+    <?php if (empty($ordenes_agrupadas)): ?>
+        <h2 class="text-danger text-center">No hay pedidos registrados.</h2>
+    <?php else: ?>
+        <?php foreach ($ordenes_agrupadas as $id_orden => $orden):
+
+ ?>
+            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
+                <h3>Orden #<?= $id_orden ?> - <?= $orden['fecha'] ?> (<?= $orden['estatus'] ?>)</h3>
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td><?= $producto['nombre'] ?></td>
-                            <td><?= $producto['cantidad'] ?></td>
-                            <td>$<?= number_format($producto['precio'], 2) ?></td>
-                            <td>$<?= number_format($producto['subtotal'], 2) ?></td>
+                            <th>Solicitante</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio unitario</th>
+                            <th>Subtotal</th>
                         </tr>
-                    <?php endforeach; ?>
-                    <tr>
-                        <td colspan="3"><strong>Total</strong></td>
-                        <td><strong>$<?= number_format($total, 2) ?></strong></td>
-                        <td>
-                            <form method="post">
-                                <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
-                                <input type="hidden" name="fecha_pedido" value="<?php echo $orden['fecha']; ?>">
-                                <button type="submit" name="insertar" class="btn btn-success">Aceptar Pedido</button>
-                            </form>
-                        </td>
-                        <td>
-                            <form method="post">
-                                <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
-                                <button type="submit" name="eliminar" class="btn btn-danger">Rechazar Pedido</button>
-                            </form>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    <?php endforeach; ?>
-<?php endif; ?>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $total = 0;
+                        foreach ($orden['productos'] as $producto):
+                            $total += $producto['subtotal'];
+                        ?>
+                            <tr>
+                                <td><?= $producto['name'] ?></td>
+                                <td><?= $producto['nombre'] ?></td>
+                                <td><?= $producto['cantidad'] ?></td>
+                                <td>$<?= number_format($producto['precio'], 2) ?></td>
+                                <td>$<?= number_format($producto['subtotal'], 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <td colspan="3"><strong>Total</strong></td>
+                            <td><strong>$<?= number_format($total, 2) ?></strong></td>
+                            <?php if ($es_admin): ?>
+                                <td>
+                                    <form method="post">
+                                        <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
+                                        <input type="hidden" name="fecha_pedido" value="<?php echo $orden['fecha']; ?>">
+                                        <button type="submit" name="insertar" class="btn btn-success btn-sm">Aceptar</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post">
+                                        <input type="hidden" name="id_orden" value="<?php echo $id_orden; ?>">
+                                        <button type="submit" name="eliminar" class="btn btn-danger btn-sm">Rechazar</button>
+                                    </form>
+                                </td>
+                            <?php else: ?>
+                                <td colspan="2" class="text-center text-muted">Solo el administrador puede gestionar pedidos</td>
+                            <?php endif; ?>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </body>
 
 </html>
