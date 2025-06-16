@@ -29,7 +29,8 @@ if (isset($_POST['login'])) {
 
     try {
         // Seleccionar el hash de la contraseña desde la base de datos
-        $select = $cnnPDO->prepare('SELECT id_usuario, name, password FROM users WHERE email = ?');
+        $select = $cnnPDO->prepare('SELECT id_usuario, name, password, rol FROM users WHERE email = ?');
+
         $select->execute([$email]);
         $campo = $select->fetch(PDO::FETCH_ASSOC);
 
@@ -38,17 +39,21 @@ if (isset($_POST['login'])) {
             $_SESSION['name'] = htmlspecialchars($campo['name'], ENT_QUOTES, 'UTF-8'); // Escapar caracteres especiales
             $_SESSION['id_usuario'] = $campo['id_usuario'];
 
-            // Redirigir al usuario a la página de inicio
-            header('location:sesion_usuario.php');
-            exit();
-        } else {
-            // Si la contraseña o el email son incorrectos
-            $_SESSION['toastr'] = [
-                'type' => 'error',
-                'message' => 'Email o contraseña incorrecta.' // Mensaje de error
-            ];
-            header('Location: ' . $_SERVER['PHP_SELF']);
-            exit();
+            // Redirigir al usuario a la página de inicio o al administrador a su pagina de inicio
+           if ($campo && password_verify($password, $campo['password'])) {
+    $_SESSION['name'] = htmlspecialchars($campo['name'], ENT_QUOTES, 'UTF-8');
+    $_SESSION['id_usuario'] = $campo['id_usuario'];
+    $_SESSION['rol'] = $campo['rol']; // Guardar el rol en sesión
+
+    // Redirigir según el rol
+    if ($campo['rol'] === 'admin') {
+        header('Location: inicio.php'); // Página para administradores
+    } else {
+        header('Location: sesion_usuario.php'); // Página para usuarios normales
+    }
+    exit();
+}
+
         }
     } catch (PDOException $e) {
         // Registrar el error en un archivo de log para evitar exponer detalles al usuario
