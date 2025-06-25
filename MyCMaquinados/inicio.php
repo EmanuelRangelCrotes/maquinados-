@@ -142,6 +142,9 @@ if (isset($_POST['eliminar'])) {
                         <a class="nav-link" href="aceptados_adm.php">pedidos aceptados</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="gestionar_solicitudes.php">Solicitudes de Pedidos</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
                     </li>
             </div>

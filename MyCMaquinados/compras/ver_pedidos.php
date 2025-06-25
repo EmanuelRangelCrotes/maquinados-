@@ -1,5 +1,5 @@
 <?php
-require_once 'bd/db_conexion.php';
+require_once './db_conexion.php';
 session_start();
 
 $id_usuario = $_SESSION['id_usuario'];
@@ -113,7 +113,7 @@ if (isset($_POST['eliminar'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </head>
@@ -125,19 +125,22 @@ if (isset($_POST['eliminar'])) {
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="sesion_usuario.php">Pagina Principal</a>
+                        <a class="nav-link" href="./sesion_usuario.php">Pagina Principal</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="productos.php">Solicitar Material</a>
+                        <a class="nav-link" href="./pedidos.php">Pedidos de Material</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="carrito.php">carrito</a>
+                        <a class="nav-link" href="./carrito.php">carrito</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="pedidos.php">Pedidos de Material</a>
+                        <a class="nav-link" href="./ver_pedidos.php">Solicitud de Pedidos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="logout.php">Cerrar Sesión</a>
+                        <a class="nav-link" href="./pedidos_aceptados.php">Pedidos Aceptados</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/M&CMaquinados/logout.php">Cerrar Sesión</a>
                     </li>
             </div>
         </div>

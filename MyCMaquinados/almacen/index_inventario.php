@@ -1,10 +1,18 @@
 <?php include_once './templates/header.php';
 
-require_once 'bd/db_conexion.php';
+require_once './db_conexion.php';
 session_start();
 
 $name = htmlspecialchars($_SESSION['name'], ENT_QUOTES, 'UTF-8'); // Escapar caracteres especiales
 $usuario_id = $_SESSION['id_usuario'];
+if ($_SESSION['rol'] !== 'almacen') {
+    $_SESSION['toastr'] = [
+        'type' => 'error',
+        'message' => 'Acceso denegado. Rol no permitido.'
+    ];
+    header('Location: login.php');
+    exit();
+}
 
 // Validar si el formulario fue enviado
 if (isset($_POST['agregar'])) {
