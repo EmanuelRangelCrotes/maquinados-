@@ -99,19 +99,7 @@ $sql_search = "SELECT id_productos, nombre, sku, clase, descripcion, unidad_medi
 $query_search = $cnnPDO->prepare($sql_search);
 $query_search->execute();
 
-if (isset($_POST['actualizar_existencia'])) {
-    $id = $_POST['id_productos'];
-    $nueva_existencia = $_POST['existencia'];
-    $sql = "UPDATE productos SET existencia = ? WHERE id_productos = ?";
-    $query = $cnnPDO->prepare($sql);
-    $query->execute([$nueva_existencia, $id]);
-    $_SESSION['toastr'] = [
-        'type' => 'success',
-        'message' => 'Existencia actualizada correctamente.'
-    ];
-    header("Location: productos.php");
-    exit();
-}
+
 ?>
 
 <div class="row">
@@ -146,7 +134,6 @@ if (isset($_POST['actualizar_existencia'])) {
                                     <th>Unidad de Medida</th>
                                     <th>Precio</th>
                                     <th>Existencia</th>
-                                    <th>Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -159,18 +146,6 @@ if (isset($_POST['actualizar_existencia'])) {
                                         <td><?= htmlspecialchars($row['unidad_medida']) ?></td>
                                         <td><?= htmlspecialchars($row['precio']) ?></td>
                                         <td><?= htmlspecialchars($row['existencia']) ?></td>
-                                        <td>
-                                            <button type="button"
-                                                class="btn btn-primary btn-sm rounded-0 btn-editar"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#EditarModal"
-                                                data-id="<?= htmlspecialchars($row['id_productos']) ?>"
-                                                data-nombre="<?= htmlspecialchars($row['nombre']) ?>"
-                                                data-existencia="<?= htmlspecialchars($row['existencia']) ?>">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                    </div>
-                    </td>
                     </tr>
                 <?php endwhile; ?>
                 </tbody>
@@ -384,63 +359,9 @@ if (isset($_POST['actualizar_existencia'])) {
     </div>
 </div>
 
-<!-- Modal para editar solo existencia -->
-<div id="EditarModal" class="modal fade">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form method="post" id="editExistenciaForm">
-                <div class="modal-header">
-                    <h4 class="modal-title">Modificar Existencia</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="id_productos" id="edit_id_productos">
-                    <div class="mb-3">
-                        <label>Nombre:</label>
-                        <input type="text" class="form-control" id="edit_nombre" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label>Existencia actual:</label>
-                        <input type="number" class="form-control" id="edit_existencia_actual" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label>Cantidad a agregar:</label>
-                        <input type="number" class="form-control" id="edit_cantidad_sumar" min="0" value="0">
-                    </div>
-                    <div class="mb-3">
-                        <label>Nueva existencia:</label>
-                        <input type="number" class="form-control" name="existencia" id="edit_nueva_existencia" readonly>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" name="actualizar_existencia" class="btn btn-success">Guardar</button>
-                    <button type="button" class="btn btn-default border btn-sm rounded-0" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.btn-editar').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            document.getElementById('edit_id_productos').value = btn.getAttribute('data-id');
-            document.getElementById('edit_nombre').value = btn.getAttribute('data-nombre');
-            document.getElementById('edit_existencia_actual').value = btn.getAttribute('data-existencia');
-            document.getElementById('edit_cantidad_sumar').value = 0;
-            document.getElementById('edit_nueva_existencia').value = btn.getAttribute('data-existencia');
-        });
-    });
 
-    // Sumar cantidad a existencia actual y mostrar el resultado
-    document.getElementById('edit_cantidad_sumar').addEventListener('input', function() {
-        var actual = parseInt(document.getElementById('edit_existencia_actual').value) || 0;
-        var sumar = parseInt(this.value) || 0;
-        document.getElementById('edit_nueva_existencia').value = actual + sumar;
-    });
-});
-</script>
+
 
 
 <?php include_once './templates/footer.php'; ?>

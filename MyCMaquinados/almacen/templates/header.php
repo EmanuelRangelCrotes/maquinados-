@@ -15,11 +15,12 @@
 <body>
     <nav class="navbar navbar-expand navbar-dark bg-dark">
         <div class="nav navbar-nav">
-            <a class="nav-item nav-link active" href="index_inventario.php">Inicio</a>
+            <a class="nav-item nav-link active" href="index_inventario.php">Almacen</a>
             <a class="nav-item nav-link" href="productos.php">Productos</a>
             <a class="nav-item nav-link" href="proveedores.php">Proveedores</a>
             <a class="nav-item nav-link" href="solicitar_material.php">Solicitar Material</a>
             <a class="nav-item nav-link" href="gestionar_solicitudes.php">Solicitudes De Material</a>
+            <a class="nav-item nav-link" href="surtido.php">Ingresar Material</a>
             <a class="nav-item nav-link" href="logout.php">Cerrar Sesion</a>
         </div>
     </nav>

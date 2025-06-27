@@ -40,7 +40,7 @@ $usuario_id = $_SESSION['id_usuario'];
 <body>
     <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
         <div class="container-fluid">
-            <h1 class="navbar-brand">Bienvenido <?php echo $name; ?></h1>
+            <h1 class="navbar-brand">Compras</h1>
             <div class="collapse navbar-collapse" id="navbarColor01">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -57,6 +57,9 @@ $usuario_id = $_SESSION['id_usuario'];
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="./pedidos_aceptados.php">Pedidos Aceptados</a>
+                    </li>
+                     <li class="nav-item">
+                        <a class="nav-link" href="material_surtido.php">Material Surtido</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="logout.php">Cerrar Sesión</a>
